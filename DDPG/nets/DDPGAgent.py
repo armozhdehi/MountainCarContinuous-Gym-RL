@@ -123,56 +123,60 @@ class DDPGAgent:
 
     def train(self, experiences):
         """
-        Update policy and value parameters using given batch of experience tuples.
-        Calculates the Q targets, updates the Critic by minimizing the loss between Q targets and Q expected,
-        and updates the Actor by using the policy's gradient.
+        Updates both the actor and critic networks using a batch of experience tuples. This method performs several key steps:
+        1. It calculates the target Q-values for the next state.
+        2. It updates the critic by minimizing the mean squared error between the expected and target Q-values.
+        3. It updates the actor using the sampled policy gradient.
+        4. It applies soft updates to both the actor and critic target networks to gradually merge the trained networks.
 
         Args:
-            experiences (Tuple[torch.Tensor]): tuple of (s, a, r, s', done) tuples.
+            experiences (Tuple[torch.Tensor]): A batch of experience tuples, each containing states, actions, rewards,
+                                            next states, and done signals.
 
         Returns:
             None
         """
         states, actions, rewards, next_states, dones = experiences
 
-        # ---------------------------- update critic ---------------------------- #
-        # Get predicted next-state actions and Q values from target models
+        # Update the critic network:
+        # Predict the next-state actions and Q-values from the target models
         actions_next = self.actor_target(next_states)
         Q_targets_next = self.critic_target(next_states, actions_next)
 
-        # Compute Q targets for current states (y_i)
+        # Calculate Q targets for current states (y_i = r + gamma * Q'(s', a'))
         Q_targets = rewards + (self.gamma * Q_targets_next * (1 - dones))
 
-        # Compute critic loss
+        # Compute the critic loss using Mean Squared Error
         Q_expected = self.critic_local(states, actions)
         critic_loss = F.mse_loss(Q_expected, Q_targets)
 
-        # Minimize the loss
+        # Backpropagate the loss to update the critic
         self.critic_optimizer.zero_grad()
         critic_loss.backward()
         self.critic_optimizer.step()
 
-        # ---------------------------- update actor ---------------------------- #
-        # Freeze the critic network to prevent it from accumulating gradients during actor update
+        # Update the actor network:
+        # Temporarily disable gradient calculations for the critic network
         for param in self.critic_local.parameters():
             param.requires_grad = False
 
-        # Compute actor loss
+        # Calculate the actor loss (policy gradient)
         actions_pred = self.actor_local(states)
         actor_loss = -self.critic_local(states, actions_pred).mean()
 
-        # Minimize the loss
+        # Backpropagate the actor loss
         self.actor_optimizer.zero_grad()
         actor_loss.backward()
         self.actor_optimizer.step()
 
-        # Unfreeze the critic network after updating the actor
+        # Re-enable gradient calculations for the critic network
         for param in self.critic_local.parameters():
             param.requires_grad = True
 
-        # ----------------------- update target networks ----------------------- #
+        # Soft update target networks to slowly blend the local and target network parameters
         self.soft_update(self.critic_local, self.critic_target)
         self.soft_update(self.actor_local, self.actor_target)
+
 
     def soft_update(self, local_model: torch.nn.Module, target_model: torch.nn.Module):
         """
