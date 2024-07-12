@@ -171,10 +171,10 @@ class DDPGAgent:
             param.requires_grad = True
 
         # ----------------------- update target networks ----------------------- #
-        self.soft_update(self.critic_local, self.critic_target, self.tau)
-        self.soft_update(self.actor_local, self.actor_target, self.tau)
+        self.soft_update(self.critic_local, self.critic_target)
+        self.soft_update(self.actor_local, self.actor_target)
 
-    def soft_update(self, local_model: torch.nn.Module, target_model: torch.nn.Module, tau: float):
+    def soft_update(self, local_model: torch.nn.Module, target_model: torch.nn.Module):
         """
         Perform a soft update on the target model's parameters using the local model's parameters.
         It blends the parameters of both models according to the formula:
@@ -186,7 +186,6 @@ class DDPGAgent:
         Args:
             local_model (torch.nn.Module): The local model from which weights will be copied.
             target_model (torch.nn.Module): The target model to which weights will be copied.
-            tau (float): The interpolation parameter controlling the blending ratio.
         
         Returns:
             None
@@ -196,4 +195,4 @@ class DDPGAgent:
             for target_param, local_param in zip(target_model.parameters(), local_model.parameters()):
                 if target_param.data.shape != local_param.data.shape:
                     raise ValueError("Parameter shapes between the local and target model do not match.")
-                target_param.data.copy_(tau * local_param.data + (1 - tau) * target_param.data)
+                target_param.data.copy_(self.tau * local_param.data + (1 - self.tau) * target_param.data)
