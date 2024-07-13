@@ -8,3 +8,4 @@ wandb/
 checkpoints/
 movies/
 *.pth
+videos/
