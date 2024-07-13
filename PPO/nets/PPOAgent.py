@@ -1,21 +1,16 @@
 import torch
 import torch.optim as optim
 import torch.nn.functional as F
-import random
-import numpy as np
-import torch.optim as optim
 
 from .ActorNet import ActorNet  # Adjusted for relative import
 from .CriticNet import CriticNet  # Adjusted for relative import
-from utils.Memory import ReplayBuffer  # Importing from utils
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-
 class PPOAgent:
     def __init__(self, state_size, action_size, seed, hidden_size=256, lr=1e-4, gamma=0.99, tau=0.95, clip_epsilon=0.2, update_steps=4):
-        self.actor = ActorNet(state_size, action_size, seed, hidden_size, hidden_size//2).to(device)
-        self.critic = CriticNet(state_size, seed, hidden_size, hidden_size//2).to(device)
+        self.actor = ActorNet(state_size, action_size, seed, hidden_size, hidden_size // 2).to(device)
+        self.critic = CriticNet(state_size, seed, hidden_size, hidden_size // 2).to(device)
         self.actor_optimizer = optim.Adam(self.actor.parameters(), lr=lr)
         self.critic_optimizer = optim.Adam(self.critic.parameters(), lr=lr)
         self.gamma = gamma
@@ -35,17 +30,18 @@ class PPOAgent:
         advantages = []
         gae = 0
         for step in reversed(range(len(rewards))):
-            delta = rewards[step] + self.gamma * values[step + 1] * (1 - dones[step]) - values[step]
+            next_value = values[step + 1] if step + 1 < len(values) else 0
+            delta = rewards[step] + self.gamma * next_value * (1 - dones[step]) - values[step]
             gae = delta + self.gamma * self.tau * (1 - dones[step]) * gae
             advantages.insert(0, gae)
         return advantages
 
     def update(self, states, actions, log_probs, returns, advantages):
         states = torch.FloatTensor(states).to(device)
-        actions = torch.FloatFloator(actions).to(device)
-        old_log_probs = torch.FloatFloator(log_probs).to(device)
-        returns = torch.FloatFloator(returns).to(device)
-        advantages = torch.FloatFloator(advantages).to(device)
+        actions = torch.FloatTensor(actions).to(device)
+        old_log_probs = torch.FloatTensor(log_probs).to(device)
+        returns = torch.FloatTensor(returns).to(device)
+        advantages = torch.FloatTensor(advantages).to(device)
         
         for _ in range(self.update_steps):
             new_log_probs, entropy = self.actor.evaluate_actions(states, actions)

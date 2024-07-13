@@ -4,8 +4,8 @@ import torch.nn.functional as F
 from utils.initialization import param_init
 
 class CriticNet(nn.Module):
-    """Defines a Critic (Value) Model for a reinforcement learning environment."""
-    
+    """Defines a Critic (Value) Model for evaluating state values."""
+
     def __init__(self, state_size, seed, fc1_units=256, fc2_units=128):
         """
         Initializes the Critic model with two hidden layers.
@@ -38,6 +38,14 @@ class CriticNet(nn.Module):
         Returns:
             Tensor: The state value.
         """
-        x = F.relu(self.bn1(self.fc1(state)))
-        x = F.relu(self.bn2(self.fc2(x)))
+        x = self.fc1(state)
+        if x.size(0) > 1:  # Apply BatchNorm only if batch size > 1
+            x = self.bn1(x)
+        x = F.relu(x)
+        
+        x = self.fc2(x)
+        if x.size(0) > 1:  # Apply BatchNorm only if batch size > 1
+            x = self.bn2(x)
+        x = F.relu(x)
+        
         return self.fc3(x)
