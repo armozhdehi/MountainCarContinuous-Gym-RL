@@ -84,7 +84,7 @@ class DDPGAgent:
         Returns the action to be taken given a state, according to the current policy.
         
         Args:
-            state (np.array): The current state from the environment.
+            state (np.array): The current state from the environment. Must be one-dimensional.
             add_noise (bool, optional): Flag to determine whether to add noise for exploration. Defaults to True.
         
         Returns:
@@ -93,24 +93,25 @@ class DDPGAgent:
         Raises:
             ValueError: If the input state is not in the expected format or dimension.
         """
-        # Check if the input state is a NumPy array and has the correct dimension
+        # Validate input state format and dimension
         if not isinstance(state, np.ndarray) or state.ndim != 1:
             raise ValueError("Input state must be a one-dimensional NumPy array.")
 
-        # Convert state to tensor and move it to the appropriate device
-        state_tensor = torch.from_numpy(state).float().to(device)
+        # Convert state to a tensor, add a batch dimension, and move to the appropriate device
+        state_tensor = torch.from_numpy(state).float().unsqueeze(0).to(device)
 
         # Set the local actor model to evaluation mode
         self.actor_local.eval()
 
-        # Disable gradient calculation
+        # Temporarily disable gradient calculation
         with torch.no_grad():
-            action = self.actor_local(state_tensor).cpu().data.numpy()
+            action_tensor = self.actor_local(state_tensor).cpu().numpy()  # Retrieve numpy array from tensor
 
-        # Set the local actor model back to training mode
+        # Set the model back to training mode
         self.actor_local.train()
 
-        # Optionally add noise to the action for exploration purposes
+        # Extract the action from the tensor and optionally add noise for exploration
+        action = action_tensor[0]  # Remove batch dimension after computation
         if add_noise:
             action += self.noise.sample()
 
@@ -137,6 +138,12 @@ class DDPGAgent:
             None
         """
         states, actions, rewards, next_states, dones = experiences
+
+        states = states.to(device)
+        actions = actions.to(device)
+        next_states = next_states.to(device)
+        rewards = rewards.to(device)
+        dones = dones.to(device)
 
         # Update the critic network:
         # Predict the next-state actions and Q-values from the target models

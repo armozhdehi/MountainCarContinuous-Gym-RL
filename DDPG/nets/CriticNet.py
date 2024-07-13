@@ -16,6 +16,7 @@ class CriticNet(nn.Module):
             fcs1_units (int): Number of nodes in the first hidden layer
             fc2_units (int): Number of nodes in the second hidden layer
         """
+        super(CriticNet, self).__init__()
         self.seed = torch.manual_seed(seed)
         self.fcs1 = nn.Linear(state_size, fcs1_units)
         self.bn1 = nn.BatchNorm1d(fcs1_units)
