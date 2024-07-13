@@ -121,6 +121,15 @@ class DDPGAgent:
     def reset(self):
         self.noise.reset()
 
+    def save_checkpoint(self, path):
+        checkpoint = {
+            'actor_state_dict': self.actor_local.state_dict(),
+            'critic_state_dict': self.critic_local.state_dict(),
+            'actor_optimizer_state_dict': self.actor_optimizer.state_dict(),
+            'critic_optimizer_state_dict': self.critic_optimizer.state_dict()
+        }
+        torch.save(checkpoint, path)
+        print(f"Checkpoint saved at {path}")
 
     def train(self, experiences):
         """
