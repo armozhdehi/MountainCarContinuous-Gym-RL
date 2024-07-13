@@ -139,7 +139,7 @@ class TD3Agent:
 
         # Minimize the loss
         self.critic1_optimizer.zero_grad()
-        critic_loss1.backward()
+        critic_loss1.backward(retain_graph=True)
         self.critic1_optimizer.step()
 
         self.critic2_optimizer.zero_grad()
