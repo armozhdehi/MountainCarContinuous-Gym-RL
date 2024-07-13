@@ -131,6 +131,15 @@ class DDPGAgent:
         torch.save(checkpoint, path)
         print(f"Checkpoint saved at {path}")
 
+    def load_checkpoint(self, file_name):
+        """Load the checkpoint."""
+        checkpoint = torch.load(file_name)
+        self.actor_local.load_state_dict(checkpoint['actor_state_dict'])
+        self.critic_local.load_state_dict(checkpoint['critic_state_dict'])
+        self.actor_optimizer.load_state_dict(checkpoint['actor_optimizer'])
+        self.critic_optimizer.load_state_dict(checkpoint['critic_optimizer'])
+        print(f"Checkpoint loaded from {file_name}")
+
     def train(self, experiences):
         """
         Updates both the actor and critic networks using a batch of experience tuples. This method performs several key steps:
