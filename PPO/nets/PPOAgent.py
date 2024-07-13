@@ -29,9 +29,9 @@ class PPOAgent:
     def compute_gae(self, rewards, values, dones):
         advantages = []
         gae = 0
+        values = values + [0]  # Append 0 for the next_value at the end
         for step in reversed(range(len(rewards))):
-            next_value = values[step + 1] if step + 1 < len(values) else 0
-            delta = rewards[step] + self.gamma * next_value * (1 - dones[step]) - values[step]
+            delta = rewards[step] + self.gamma * values[step + 1] * (1 - dones[step]) - values[step]
             gae = delta + self.gamma * self.tau * (1 - dones[step]) * gae
             advantages.insert(0, gae)
         return advantages
