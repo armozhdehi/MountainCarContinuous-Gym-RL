@@ -60,3 +60,23 @@ class PPOAgent:
             self.critic_optimizer.zero_grad()
             critic_loss.backward()
             self.critic_optimizer.step()
+            
+    def save_checkpoint(self, path):
+        """Save model parameters to a checkpoint file."""
+        checkpoint = {
+            'actor_state_dict': self.actor.state_dict(),
+            'critic_state_dict': self.critic.state_dict(),
+            'actor_optimizer_state_dict': self.actor_optimizer.state_dict(),
+            'critic_optimizer_state_dict': self.critic_optimizer.state_dict(),
+        }
+        torch.save(checkpoint, path)
+        print(f"Checkpoint saved at {path}")
+
+    def load_checkpoint(self, path):
+        """Load model parameters from a checkpoint file."""
+        checkpoint = torch.load(path)
+        self.actor.load_state_dict(checkpoint['actor_state_dict'])
+        self.critic.load_state_dict(checkpoint['critic_state_dict'])
+        self.actor_optimizer.load_state_dict(checkpoint['actor_optimizer_state_dict'])
+        self.critic_optimizer.load_state_dict(checkpoint['critic_optimizer_state_dict'])
+        print(f"Checkpoint loaded from {path}")
